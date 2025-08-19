@@ -1,9 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { addItem } from './CartSlice';
 import './ProductList.css'
 import CartItem from './CartItem';
 function ProductList({ onHomeClick }) {
     const [showCart, setShowCart] = useState(false);
     const [showPlants, setShowPlants] = useState(false); // State to control the visibility of the About Us page
+    const dispatch = useDispatch();
+    const cartItems = useSelector(state => state.cart.items);
+    // Calcular la cantidad total de productos en el carrito
+    const calculateTotalQuantity = () => {
+        return cartItems && cartItems.length > 0
+            ? cartItems.reduce((total, item) => total + item.quantity, 0)
+            : 0;
+    };
+    // Función para agregar planta al carrito
+    const handleAddToCart = (plant) => {
+        dispatch(addItem(plant));
+    };
 
     const plantsArray = [
         {
@@ -265,17 +279,68 @@ function ProductList({ onHomeClick }) {
                             </div>
                         </a>
                     </div>
-
                 </div>
                 <div style={styleObjUl}>
                     <div> <a href="#" onClick={(e) => handlePlantsClick(e)} style={styleA}>Plants</a></div>
-                    <div> <a href="#" onClick={(e) => handleCartClick(e)} style={styleA}><h1 className='cart'><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" id="IconChangeColor" height="68" width="68"><rect width="156" height="156" fill="none"></rect><circle cx="80" cy="216" r="12"></circle><circle cx="184" cy="216" r="12"></circle><path d="M42.3,72H221.7l-26.4,92.4A15.9,15.9,0,0,1,179.9,176H84.1a15.9,15.9,0,0,1-15.4-11.6L32.5,37.8A8,8,0,0,0,24.8,32H8" fill="none" stroke="#faf9f9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" id="mainIconPathAttribute"></path></svg></h1></a></div>
+                    <div> <a href="#" onClick={(e) => handleCartClick(e)} style={styleA}>
+                        <h1 className='cart' style={{ position: 'relative' }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" id="IconChangeColor" height="68" width="68"><rect width="156" height="156" fill="none"></rect><circle cx="80" cy="216" r="12"></circle><circle cx="184" cy="216" r="12"></circle><path d="M42.3,72H221.7l-26.4,92.4A15.9,15.9,0,0,1,179.9,176H84.1a15.9,15.9,0,0,1-15.4-11.6L32.5,37.8A8,8,0,0,0,24.8,32H8" fill="none" stroke="#faf9f9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" id="mainIconPathAttribute"></path></svg>
+                            {calculateTotalQuantity() > 0 && (
+                                <span style={{
+                                    position: 'absolute',
+                                    top: '10px',
+                                    right: '10px',
+                                    background: '#388e3c',
+                                    color: 'white',
+                                    borderRadius: '50%',
+                                    width: '28px',
+                                    height: '28px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontWeight: 'bold',
+                                    fontSize: '18px',
+                                    border: '2px solid #fff',
+                                    zIndex: 2
+                                }}>{calculateTotalQuantity()}</span>
+                            )}
+                        </h1>
+                    </a></div>
                 </div>
             </div>
             {!showCart ? (
                 <div className="product-grid">
-
-
+                    {plantsArray.map((categoryObj, idx) => (
+                        <div key={categoryObj.category + idx} className="category-section">
+                            <h2 style={{margin: '30px 0 10px 0', color: '#4CAF50'}}>{categoryObj.category}</h2>
+                            <div className="category-plants" style={{display: 'flex', flexWrap: 'wrap', gap: '24px'}}>
+                                {categoryObj.plants.map((plant, i) => (
+                                    <div key={plant.name + i} className="plant-card" style={{background: '#fff', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', padding: '18px', width: '260px', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                                        <img src={plant.image} alt={plant.name} style={{width: '180px', height: '140px', objectFit: 'cover', borderRadius: '8px'}} />
+                                        <h3 style={{margin: '12px 0 6px 0'}}>{plant.name}</h3>
+                                        <p style={{fontSize: '15px', color: '#555', minHeight: '48px'}}>{plant.description}</p>
+                                        <div style={{fontWeight: 'bold', color: '#388e3c', margin: '8px 0'}}>{plant.cost}</div>
+                                        <button
+                                            style={{
+                                                background: cartItems.some(item => item.name === plant.name) ? '#388e3c' : '#4CAF50',
+                                                color: '#fff',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                padding: '8px 18px',
+                                                cursor: cartItems.some(item => item.name === plant.name) ? 'not-allowed' : 'pointer',
+                                                marginTop: '8px',
+                                                opacity: cartItems.some(item => item.name === plant.name) ? 0.7 : 1
+                                            }}
+                                            onClick={() => handleAddToCart(plant)}
+                                            disabled={cartItems.some(item => item.name === plant.name)}
+                                        >
+                                            {cartItems.some(item => item.name === plant.name) ? 'Added' : 'Add to Cart'}
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             ) : (
                 <CartItem onContinueShopping={handleContinueShopping} />
